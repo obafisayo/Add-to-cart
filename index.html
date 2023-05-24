@@ -1,0 +1,165 @@
+<!doctype html>
+<html>
+    <head><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css">
+        <title>Add to Cart</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300&display=swap" rel="stylesheet">
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+        <link rel="manifest" href="/site.webmanifest">
+        <link rel="stylesheet" href="index.css">
+        <style>
+    html, body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Rubik', sans-serif;
+    background-color: #EEF0F4;
+    color: #432000;
+    user-select: none;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    max-width: 320px;
+    margin: 30px auto;
+}
+
+img {
+    width: 150px;
+    margin: 0 auto;
+}
+
+input {
+    color: #432000;
+    background-color: #DCE1EB;
+    border: 0;
+    padding: 15px;
+    border-radius: 8px;
+    font-size: 20px;
+    text-align: center;
+    font-family: 'Rubik', sans-serif;
+    margin: 10px 0;
+}
+
+button {
+    color: #FDFDFD;
+    background-color: #AC485A;
+    border: 0;
+    padding: 15px;
+    border-radius: 8px;
+    font-size: 20px;
+    text-align: center;
+    font-family: 'Rubik', sans-serif;
+}
+
+button:hover {
+    background-color: #432000;
+    cursor: pointer;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+ul li {
+    font-size: 20px;
+    background-color: #FFFDF8;
+    padding: 15px;
+    border-radius: 8px;
+    flex-grow: 1;
+    text-align: center;
+    box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.2)
+}
+
+ul li:hover {
+    background-color: #FFECC7;
+    cursor: pointer;
+}
+</style>
+    </head>
+    <body>
+        <div class="container">
+            <img src="assets/cat.png">
+            <input type="text" id="input-field" placeholder="Bread">
+            <button id="add-button">Add to cart</button>
+            <ul id="shopping-list">
+            </ul>
+        </div>
+        <script type="module">
+        
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js"
+import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js"
+
+const appSettings = {
+    databaseURL: "https://real-time-database-ce1ac-default-rtdb.firebaseio.com/"
+}
+
+const app = initializeApp(appSettings)
+const database = getDatabase(app)
+const shoppingListInDB = ref(database, "shoppingList")
+
+const inputFieldEl = document.getElementById("input-field")
+const addButtonEl = document.getElementById("add-button")
+const shoppingListEl = document.getElementById("shopping-list")
+
+addButtonEl.addEventListener("click", function() {
+    let inputValue = inputFieldEl.value
+    
+    push(shoppingListInDB, inputValue)
+    
+    clearInputFieldEl()
+})
+
+onValue(shoppingListInDB, function(snapshot) {
+    if (snapshot.exists()) {
+        let itemsArray = Object.entries(snapshot.val())
+    
+        clearShoppingListEl()
+        
+        for (let i = 0; i < itemsArray.length; i++) {
+            let currentItem = itemsArray[i]
+            let currentItemID = currentItem[0]
+            let currentItemValue = currentItem[1]
+            
+            appendItemToShoppingListEl(currentItem)
+        }    
+    } else {
+        shoppingListEl.innerHTML = "No items here... yet"
+    }
+})
+
+function clearShoppingListEl() {
+    shoppingListEl.innerHTML = ""
+}
+
+function clearInputFieldEl() {
+    inputFieldEl.value = ""
+}
+
+function appendItemToShoppingListEl(item) {
+    let itemID = item[0]
+    let itemValue = item[1]
+    
+    let newEl = document.createElement("li")
+    
+    newEl.textContent = itemValue
+    
+    newEl.addEventListener("click", function() {
+        let exactLocationOfItemInDB = ref(database, `shoppingList/${itemID}`)
+        
+        remove(exactLocationOfItemInDB)
+    })
+    
+    shoppingListEl.append(newEl)
+}
+        </script>
+    </body>
+</html>
